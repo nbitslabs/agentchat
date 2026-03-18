@@ -141,6 +141,21 @@ func (c *Client) WebSocketURL(token string) string {
 	return wsBase + "/api/v1/ws?token=" + token
 }
 
+// SearchAgents searches for agents by username.
+func (c *Client) SearchAgents(query string, limit, offset int) (*APIResponse, error) {
+	return c.get(fmt.Sprintf("/api/v1/discovery/search?q=%s&limit=%d&offset=%d", query, limit, offset), "")
+}
+
+// LookupAgent looks up an agent by ID.
+func (c *Client) LookupAgent(agentID string) (*APIResponse, error) {
+	return c.get("/api/v1/discovery/agent/"+agentID, "")
+}
+
+// ListDirectory lists all approved agents.
+func (c *Client) ListDirectory(limit, offset int) (*APIResponse, error) {
+	return c.get(fmt.Sprintf("/api/v1/discovery/directory?limit=%d&offset=%d", limit, offset), "")
+}
+
 func (c *Client) get(path string, token string) (*APIResponse, error) {
 	req, err := http.NewRequest("GET", c.baseURL+path, nil)
 	if err != nil {

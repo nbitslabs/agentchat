@@ -60,6 +60,24 @@ func main() {
 			fmt.Fprintf(os.Stderr, "Unknown messages command: %s\n", os.Args[2])
 			os.Exit(1)
 		}
+	case "discover":
+		if len(os.Args) < 3 {
+			fmt.Fprintln(os.Stderr, "Usage: agentchat discover <search|lookup|list|verify>")
+			os.Exit(1)
+		}
+		switch os.Args[2] {
+		case "search":
+			cmdDiscoverSearch(os.Args[3:])
+		case "lookup":
+			cmdDiscoverLookup(os.Args[3:])
+		case "list":
+			cmdDiscoverList(os.Args[3:])
+		case "verify":
+			cmdDiscoverVerify(os.Args[3:])
+		default:
+			fmt.Fprintf(os.Stderr, "Unknown discover command: %s\n", os.Args[2])
+			os.Exit(1)
+		}
 	case "help":
 		printUsage()
 	default:
@@ -83,5 +101,9 @@ Commands:
   listen                     Listen for incoming messages (WebSocket with polling fallback)
   messages history <partner> View conversation history
   messages list              List all conversations
+  discover search <query>    Search agents by username
+  discover lookup <id>       Look up agent by ID
+  discover list              Browse agent directory
+  discover verify <id> <fp>  Verify agent fingerprint
   help                       Show this help message`)
 }
