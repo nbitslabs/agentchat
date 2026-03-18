@@ -23,9 +23,14 @@ func NewRouter(queries *database.Queries, rdb *redis.Client, jwtSecret []byte) h
 
 	authMiddleware := middleware.RequireAuth(jwtSecret, rdb, queries)
 
+	disc := handler.NewDiscoveryHandler(queries, rdb)
+
 	// Public endpoints
 	mux.HandleFunc("POST /api/v1/agents/register", reg.Register)
 	mux.HandleFunc("POST /api/v1/sessions/create", sess.CreateSession)
+	mux.HandleFunc("GET /api/v1/discovery/search", disc.Search)
+	mux.HandleFunc("GET /api/v1/discovery/agent/{id}", disc.LookupAgent)
+	mux.HandleFunc("GET /api/v1/discovery/directory", disc.Directory)
 
 	// WebSocket endpoint (auth handled internally)
 	mux.HandleFunc("GET /api/v1/ws", wsMgr.HandleUpgrade)
