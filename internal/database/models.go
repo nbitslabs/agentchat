@@ -16,3 +16,11 @@ type Agent struct {
 	UsernameStatus string
 	CreatedAt      time.Time
 }
+
+type Session struct {
+	SessionID        string
+	AgentID          string
+	SessionPublicKey string
+	CreatedAt        time.Time
+	ExpiresAt        time.Time
+}
