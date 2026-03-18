@@ -7,8 +7,28 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
+	"time"
 )
+
+const countConversationMessages = `-- name: CountConversationMessages :one
+SELECT COUNT(*) FROM messages
+WHERE (sender_id = $1 AND recipient_id = $2)
+   OR (sender_id = $2 AND recipient_id = $1)
+`
+
+type CountConversationMessagesParams struct {
+	SenderID    string
+	RecipientID string
+}
+
+func (q *Queries) CountConversationMessages(ctx context.Context, arg CountConversationMessagesParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countConversationMessages, arg.SenderID, arg.RecipientID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
 
 const createMessage = `-- name: CreateMessage :one
 INSERT INTO messages (message_id, sender_id, recipient_id, type, content)
@@ -61,6 +81,124 @@ func (q *Queries) GetAgentByApprovedUsername(ctx context.Context, lower string) 
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const getConversationHistory = `-- name: GetConversationHistory :many
+SELECT message_id, sender_id, recipient_id, type, content, created_at, delivered_at, read_at FROM messages
+WHERE (sender_id = $1 AND recipient_id = $2)
+   OR (sender_id = $2 AND recipient_id = $1)
+ORDER BY created_at ASC
+LIMIT $3 OFFSET $4
+`
+
+type GetConversationHistoryParams struct {
+	SenderID    string
+	RecipientID string
+	Limit       int32
+	Offset      int32
+}
+
+func (q *Queries) GetConversationHistory(ctx context.Context, arg GetConversationHistoryParams) ([]Message, error) {
+	rows, err := q.db.QueryContext(ctx, getConversationHistory,
+		arg.SenderID,
+		arg.RecipientID,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Message
+	for rows.Next() {
+		var i Message
+		if err := rows.Scan(
+			&i.MessageID,
+			&i.SenderID,
+			&i.RecipientID,
+			&i.Type,
+			&i.Content,
+			&i.CreatedAt,
+			&i.DeliveredAt,
+			&i.ReadAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getConversations = `-- name: GetConversations :many
+SELECT DISTINCT ON (partner_id)
+    partner_id,
+    message_id,
+    sender_id,
+    recipient_id,
+    type,
+    content,
+    created_at,
+    delivered_at,
+    read_at
+FROM (
+    SELECT
+        CASE WHEN sender_id = $1 THEN recipient_id ELSE sender_id END AS partner_id,
+        message_id, sender_id, recipient_id, type, content, created_at, delivered_at, read_at
+    FROM messages
+    WHERE sender_id = $1 OR recipient_id = $1
+) sub
+ORDER BY partner_id, created_at DESC
+`
+
+type GetConversationsRow struct {
+	PartnerID   interface{}
+	MessageID   string
+	SenderID    string
+	RecipientID string
+	Type        string
+	Content     json.RawMessage
+	CreatedAt   time.Time
+	DeliveredAt sql.NullTime
+	ReadAt      sql.NullTime
+}
+
+func (q *Queries) GetConversations(ctx context.Context, senderID string) ([]GetConversationsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getConversations, senderID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetConversationsRow
+	for rows.Next() {
+		var i GetConversationsRow
+		if err := rows.Scan(
+			&i.PartnerID,
+			&i.MessageID,
+			&i.SenderID,
+			&i.RecipientID,
+			&i.Type,
+			&i.Content,
+			&i.CreatedAt,
+			&i.DeliveredAt,
+			&i.ReadAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getMessageByID = `-- name: GetMessageByID :one
@@ -134,5 +272,20 @@ UPDATE messages SET read_at = NOW() WHERE message_id = $1 AND read_at IS NULL
 
 func (q *Queries) MarkMessageRead(ctx context.Context, messageID string) error {
 	_, err := q.db.ExecContext(ctx, markMessageRead, messageID)
+	return err
+}
+
+const markMessageReadByRecipient = `-- name: MarkMessageReadByRecipient :exec
+UPDATE messages SET read_at = NOW()
+WHERE message_id = $1 AND recipient_id = $2 AND read_at IS NULL
+`
+
+type MarkMessageReadByRecipientParams struct {
+	MessageID   string
+	RecipientID string
+}
+
+func (q *Queries) MarkMessageReadByRecipient(ctx context.Context, arg MarkMessageReadByRecipientParams) error {
+	_, err := q.db.ExecContext(ctx, markMessageReadByRecipient, arg.MessageID, arg.RecipientID)
 	return err
 }
