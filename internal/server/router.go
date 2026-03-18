@@ -22,8 +22,11 @@ func NewRouter(queries *database.Queries, rdb *redis.Client, jwtSecret []byte) h
 	mux.HandleFunc("POST /api/v1/agents/register", reg.Register)
 	mux.HandleFunc("POST /api/v1/sessions/create", sess.CreateSession)
 
+	prof := handler.NewProfileHandler(queries)
+
 	// Authenticated endpoints
 	mux.Handle("POST /api/v1/agents/username/claim", authMiddleware(http.HandlerFunc(usr.ClaimUsername)))
+	mux.Handle("GET /api/v1/agents/me", authMiddleware(http.HandlerFunc(prof.GetMe)))
 
 	return mux
 }
