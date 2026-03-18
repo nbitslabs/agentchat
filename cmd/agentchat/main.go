@@ -14,7 +14,7 @@ func main() {
 	switch os.Args[1] {
 	case "auth":
 		if len(os.Args) < 3 {
-			fmt.Fprintln(os.Stderr, "Usage: agentchat auth <generate|import|status>")
+			fmt.Fprintln(os.Stderr, "Usage: agentchat auth <generate|import|status|register|login|claim>")
 			os.Exit(1)
 		}
 		switch os.Args[2] {
@@ -28,6 +28,16 @@ func main() {
 			cmdAuthImport(os.Args[3])
 		case "status":
 			cmdAuthStatus()
+		case "register":
+			cmdRegister()
+		case "login":
+			cmdCreateSession()
+		case "claim":
+			if len(os.Args) < 4 {
+				fmt.Fprintln(os.Stderr, "Usage: agentchat auth claim <username>")
+				os.Exit(1)
+			}
+			cmdClaimUsername(os.Args[3])
 		default:
 			fmt.Fprintf(os.Stderr, "Unknown auth command: %s\n", os.Args[2])
 			os.Exit(1)
@@ -48,5 +58,8 @@ Commands:
   auth generate              Generate a new cryptographic identity
   auth import <key-file>     Import an existing private key
   auth status                Display identity and session status
+  auth register              Register agent on the platform
+  auth login                 Create a session (login)
+  auth claim <username>      Claim a username
   help                       Show this help message`)
 }
