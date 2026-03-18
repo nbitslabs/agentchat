@@ -31,6 +31,7 @@ func NewRouter(queries *database.Queries, rdb *redis.Client, jwtSecret []byte) h
 	mux.HandleFunc("GET /api/v1/ws", wsMgr.HandleUpgrade)
 
 	conv := handler.NewConversationHandler(queries)
+	poll := handler.NewPollingHandler(queries)
 
 	// Authenticated endpoints
 	mux.Handle("POST /api/v1/agents/username/claim", authMiddleware(http.HandlerFunc(usr.ClaimUsername)))
@@ -39,6 +40,7 @@ func NewRouter(queries *database.Queries, rdb *redis.Client, jwtSecret []byte) h
 	mux.Handle("GET /api/v1/messages/history/{partner_id}", authMiddleware(http.HandlerFunc(conv.GetHistory)))
 	mux.Handle("GET /api/v1/messages/conversations", authMiddleware(http.HandlerFunc(conv.ListConversations)))
 	mux.Handle("POST /api/v1/messages/mark-read", authMiddleware(http.HandlerFunc(conv.MarkRead)))
+	mux.Handle("GET /api/v1/messages/poll", authMiddleware(http.HandlerFunc(poll.Poll)))
 
 	return mux
 }
