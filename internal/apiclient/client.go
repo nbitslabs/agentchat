@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -109,4 +110,44 @@ func (c *Client) SendMessage(token, recipient, content string) (*APIResponse, er
 		"recipient": recipient,
 		"content":   content,
 	}, token)
+}
+
+// GetHistory fetches conversation history with a partner.
+func (c *Client) GetHistory(token, partnerID string, limit, offset int) (*APIResponse, error) {
+	return c.get(fmt.Sprintf("/api/v1/messages/history/%s?limit=%d&offset=%d", partnerID, limit, offset), token)
+}
+
+// ListConversations lists all conversations.
+func (c *Client) ListConversations(token string) (*APIResponse, error) {
+	return c.get("/api/v1/messages/conversations", token)
+}
+
+// PollMessages polls for undelivered messages.
+func (c *Client) PollMessages(token string) (*APIResponse, error) {
+	return c.get("/api/v1/messages/poll", token)
+}
+
+// MarkRead marks a message as read.
+func (c *Client) MarkRead(token, messageID string) (*APIResponse, error) {
+	return c.post("/api/v1/messages/mark-read", map[string]string{
+		"message_id": messageID,
+	}, token)
+}
+
+// WebSocketURL returns the WebSocket URL for the API.
+func (c *Client) WebSocketURL(token string) string {
+	wsBase := strings.Replace(c.baseURL, "http://", "ws://", 1)
+	wsBase = strings.Replace(wsBase, "https://", "wss://", 1)
+	return wsBase + "/api/v1/ws?token=" + token
+}
+
+func (c *Client) get(path string, token string) (*APIResponse, error) {
+	req, err := http.NewRequest("GET", c.baseURL+path, nil)
+	if err != nil {
+		return nil, err
+	}
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+	return c.do(req)
 }

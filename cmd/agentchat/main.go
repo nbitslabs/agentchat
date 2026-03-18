@@ -44,6 +44,22 @@ func main() {
 		}
 	case "send":
 		cmdSend(os.Args[2:])
+	case "listen":
+		cmdListen()
+	case "messages":
+		if len(os.Args) < 3 {
+			fmt.Fprintln(os.Stderr, "Usage: agentchat messages <history|list>")
+			os.Exit(1)
+		}
+		switch os.Args[2] {
+		case "history":
+			cmdMessagesHistory(os.Args[3:])
+		case "list":
+			cmdMessagesList()
+		default:
+			fmt.Fprintf(os.Stderr, "Unknown messages command: %s\n", os.Args[2])
+			os.Exit(1)
+		}
 	case "help":
 		printUsage()
 	default:
@@ -64,5 +80,8 @@ Commands:
   auth login                 Create a session (login)
   auth claim <username>      Claim a username
   send <recipient> [msg]     Send a message (-i for interactive, --json for JSON output)
+  listen                     Listen for incoming messages (WebSocket with polling fallback)
+  messages history <partner> View conversation history
+  messages list              List all conversations
   help                       Show this help message`)
 }
