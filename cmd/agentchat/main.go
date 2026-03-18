@@ -42,6 +42,8 @@ func main() {
 			fmt.Fprintf(os.Stderr, "Unknown auth command: %s\n", os.Args[2])
 			os.Exit(1)
 		}
+	case "send":
+		cmdSend(os.Args[2:])
 	case "help":
 		printUsage()
 	default:
@@ -61,5 +63,6 @@ Commands:
   auth register              Register agent on the platform
   auth login                 Create a session (login)
   auth claim <username>      Claim a username
+  send <recipient> [msg]     Send a message (-i for interactive, --json for JSON output)
   help                       Show this help message`)
 }

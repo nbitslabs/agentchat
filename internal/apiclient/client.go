@@ -102,3 +102,11 @@ func (c *Client) ClaimUsername(token, username string) (*APIResponse, error) {
 		"username": username,
 	}, token)
 }
+
+// SendMessage sends a message to a recipient.
+func (c *Client) SendMessage(token, recipient, content string) (*APIResponse, error) {
+	return c.post("/api/v1/messages/send", map[string]string{
+		"recipient": recipient,
+		"content":   content,
+	}, token)
+}
