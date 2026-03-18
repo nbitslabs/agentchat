@@ -6,6 +6,7 @@ package database
 
 import (
 	"database/sql"
+	"encoding/json"
 	"time"
 )
 
@@ -15,6 +16,17 @@ type Agent struct {
 	Username       sql.NullString
 	UsernameStatus string
 	CreatedAt      time.Time
+}
+
+type Message struct {
+	MessageID   string
+	SenderID    string
+	RecipientID string
+	Type        string
+	Content     json.RawMessage
+	CreatedAt   time.Time
+	DeliveredAt sql.NullTime
+	ReadAt      sql.NullTime
 }
 
 type Session struct {
