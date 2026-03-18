@@ -12,5 +12,8 @@ UPDATE messages SET delivered_at = NOW() WHERE message_id = $1 AND delivered_at 
 -- name: GetUndeliveredMessages :many
 SELECT * FROM messages WHERE recipient_id = $1 AND delivered_at IS NULL ORDER BY created_at ASC;
 
+-- name: MarkMessageRead :exec
+UPDATE messages SET read_at = NOW() WHERE message_id = $1 AND read_at IS NULL;
+
 -- name: GetAgentByApprovedUsername :one
 SELECT * FROM agents WHERE LOWER(username) = LOWER($1) AND username_status = 'approved';

@@ -127,3 +127,12 @@ func (q *Queries) MarkMessageDelivered(ctx context.Context, messageID string) er
 	_, err := q.db.ExecContext(ctx, markMessageDelivered, messageID)
 	return err
 }
+
+const markMessageRead = `-- name: MarkMessageRead :exec
+UPDATE messages SET read_at = NOW() WHERE message_id = $1 AND read_at IS NULL
+`
+
+func (q *Queries) MarkMessageRead(ctx context.Context, messageID string) error {
+	_, err := q.db.ExecContext(ctx, markMessageRead, messageID)
+	return err
+}
