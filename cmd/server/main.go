@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"database/sql"
+	"embed"
 	"encoding/hex"
 	"log"
 	"net/http"
@@ -13,8 +14,12 @@ import (
 	"github.com/nbitslabs/agentchat/internal/database"
 	"github.com/nbitslabs/agentchat/internal/server"
 	"github.com/nbitslabs/agentchat/internal/session"
+	"github.com/pressly/goose/v3"
 	"github.com/redis/go-redis/v9"
 )
+
+//go:embed migrations/*.sql
+var migrations embed.FS
 
 func main() {
 	dsn := os.Getenv("DATABASE_URL")
@@ -57,6 +62,16 @@ func main() {
 	if err := db.Ping(); err != nil {
 		log.Fatalf("failed to ping database: %v", err)
 	}
+
+	// Run migrations automatically
+	goose.SetBaseFS(migrations)
+	if err := goose.SetDialect("postgres"); err != nil {
+		log.Fatalf("failed to set goose dialect: %v", err)
+	}
+	if err := goose.Up(db, "migrations"); err != nil {
+		log.Fatalf("failed to run migrations: %v", err)
+	}
+	log.Println("database migrations up to date")
 
 	rdb := redis.NewClient(&redis.Options{Addr: redisAddr})
 	defer rdb.Close()
