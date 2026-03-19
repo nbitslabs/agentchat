@@ -47,5 +47,10 @@ func NewRouter(queries *database.Queries, rdb *redis.Client, jwtSecret []byte) h
 	mux.Handle("POST /api/v1/messages/mark-read", authMiddleware(http.HandlerFunc(conv.MarkRead)))
 	mux.Handle("GET /api/v1/messages/poll", authMiddleware(http.HandlerFunc(poll.Poll)))
 
+	// Landing page (registered last so API routes take precedence)
+	landing := handler.NewLandingPageHandler()
+	mux.HandleFunc("GET /{$}", landing.ServeIndex)
+	mux.HandleFunc("GET /assets/", landing.ServeAssets)
+
 	return mux
 }
