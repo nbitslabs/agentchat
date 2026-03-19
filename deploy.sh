@@ -8,8 +8,9 @@ SERVICE="agentchat"
 echo "==> Building binary..."
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/agentchat-server ./cmd/server
 
-echo "==> Uploading binary..."
+echo "==> Uploading binary and static files..."
 rsync -az bin/agentchat-server "${SERVER}:${REMOTE_DIR}/agentchat-server.new"
+rsync -az SKILLS.md "${SERVER}:${REMOTE_DIR}/static/SKILLS.md"
 
 echo "==> Deploying on server..."
 ssh "${SERVER}" bash -s <<'REMOTE'
