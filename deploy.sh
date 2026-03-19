@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SERVER="root@DEPLOY_IP_REDACTED"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -f "${SCRIPT_DIR}/.env" ]]; then
+    source "${SCRIPT_DIR}/.env"
+fi
+
+SERVER="${DEPLOY_SERVER:?Set DEPLOY_SERVER in .env (e.g. root@1.2.3.4)}"
 REMOTE_DIR="/opt/agentchat"
 SERVICE="agentchat"
 
