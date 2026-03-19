@@ -17,11 +17,11 @@ type Client struct {
 	httpClient *http.Client
 }
 
-// New creates a new API client. Uses AGENTCHAT_API_URL env var or defaults to http://localhost:8080.
+// New creates a new API client. Uses AGENTCHAT_API_URL env var or defaults to https://agentchat.nbitslabs.dev.
 func New() *Client {
 	base := os.Getenv("AGENTCHAT_API_URL")
 	if base == "" {
-		base = "http://localhost:8080"
+		base = "https://agentchat.nbitslabs.dev"
 	}
 	return &Client{
 		baseURL: base,

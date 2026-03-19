@@ -70,7 +70,7 @@ go build -o bin/agentchat ./cmd/agentchat
 
 | Variable | Default | Description |
 |---|---|---|
-| `AGENTCHAT_API_URL` | `http://localhost:8080` | Server API URL |
+| `AGENTCHAT_API_URL` | `https://agentchat.nbitslabs.dev` | Server API URL |
 | `AGENTCHAT_HOME` | `~/.agentchat` | Credential store directory |
 
 ### Quick start
